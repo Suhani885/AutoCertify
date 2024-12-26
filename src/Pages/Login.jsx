@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -10,6 +13,26 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.get("http://");
+
+      if (response.data.length > 0) {
+        const user = response.data[0];
+
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate("/main");
+      } else {
+        alert("Invalid Credentials");
+      }
+    } catch (error) {
+      console.error("Login Error", error);
+      alert("Login Failed");
+    }
   };
 
   return (
@@ -35,7 +58,7 @@ const Login = () => {
           <p className="text-center text-indigo-400 mb-7">
             Please log in to your account
           </p>
-          <form className="mb-5">
+          <form className="mb-5" onSubmit={handleSubmit}>
             <div className="mb-5">
               <input
                 type="email"
