@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const Cert = ({ fields = [], setFields = () => {}, onSave = () => {} }) => {
+const Cert = ({ setFields = () => {} }) => {
   const [image, setImage] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [dataFile, setDataFile] = useState(null);
@@ -9,8 +9,14 @@ const Cert = ({ fields = [], setFields = () => {}, onSave = () => {} }) => {
     name: "",
     points: { topLeft: null, bottomRight: null },
   });
+
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
+  const [savedFields, setSavedFields] = useState([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [downloadUrl, setDownloadUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [downloadReady, setDownloadReady] = useState(false);
 
   const onImageChange = (event) => {
     if (event.target.files && event.target.files[0]) {
@@ -30,53 +36,24 @@ const Cert = ({ fields = [], setFields = () => {}, onSave = () => {} }) => {
     const bounds = event.target.getBoundingClientRect();
     const x = event.pageX - bounds.left;
     const y = event.pageY - bounds.top;
+
     const cw = event.target.clientWidth;
     const ch = event.target.clientHeight;
     const iw = event.target.naturalWidth;
     const ih = event.target.naturalHeight;
     const px = Math.round((x / cw) * iw);
     const py = Math.round((y / ch) * ih);
-    if (selectedFieldIndex !== null) {
-      if (!currentField.points.topLeft) {
-        setCurrentField({
-          ...currentField,
-          points: {
-            ...currentField.points,
-            topLeft: [px, py],
-          },
-        });
-      } else {
-        const updatedFields = [...fields];
-        updatedFields[selectedFieldIndex] = {
-          ...updatedFields[selectedFieldIndex],
-          top_left_corner: currentField.points.topLeft,
-          bottom_right_corner: [px, py],
-        };
-        setFields(updatedFields);
-        setCurrentField({
-          name: "",
-          points: { topLeft: null, bottomRight: null },
-        });
-        setSelectedFieldIndex(null);
-      }
+
+    if (!currentField.points.topLeft) {
+      setCurrentField({
+        ...currentField,
+        points: { ...currentField.points, topLeft: [px, py] },
+      });
     } else {
-      if (!currentField.points.topLeft) {
-        setCurrentField({
-          ...currentField,
-          points: {
-            ...currentField.points,
-            topLeft: [px, py],
-          },
-        });
-      } else {
-        setCurrentField({
-          ...currentField,
-          points: {
-            ...currentField.points,
-            bottomRight: [px, py],
-          },
-        });
-      }
+      setCurrentField({
+        ...currentField,
+        points: { ...currentField.points, bottomRight: [px, py] },
+      });
     }
   };
 
@@ -102,40 +79,65 @@ const Cert = ({ fields = [], setFields = () => {}, onSave = () => {} }) => {
       bottom_right_corner: currentField.points.bottomRight,
     };
 
-    setFields([...fields, newField]);
-    setCurrentField({
-      name: "",
-      points: { topLeft: null, bottomRight: null },
-    });
+    const updatedFields = [...savedFields, newField];
+    setSavedFields(updatedFields);
+    setFields(updatedFields);
+    resetCurrentField();
+  };
+
+  const removeField = (index) => {
+    const updatedFields = savedFields.filter((_, i) => i !== index);
+    setSavedFields(updatedFields);
+    setFields(updatedFields);
   };
 
   const handleSubmit = async () => {
-    if (!imageFile || !dataFile || fields.length === 0) return;
+    if (!imageFile || !dataFile || savedFields.length === 0) return;
 
+    setIsLoading(true);
     setIsSubmit(true);
+    setDownloadReady(false);
 
     const formData = new FormData();
     formData.append("image", imageFile);
     formData.append("userDataFile", dataFile);
-    formData.append("field_coords", JSON.stringify(fieldCoordinates));
+    formData.append("field_coords", JSON.stringify(savedFields));
 
     try {
-      await axios.post("/api/certificate", formData);
-      setImage(null);
-      setImageFile(null);
-      setDataFile(null);
-      setFields([]);
-      resetCurrentField();
+      const response = await axios.post("/main/generate/", formData);
+      // setDownloadUrl(response.data.downloadUrl);
+      setDownloadReady(true);
     } catch (error) {
       console.error("Error:", error);
+      alert("Failed to generate certificates. Please try again.");
     } finally {
       setIsSubmit(false);
+      setIsLoading(false);
     }
   };
 
+  const handleDownload = () => {
+    if (!downloadUrl) return;
+
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.click();
+  };
+
   return (
-    <div className="h-screen w-full flex flex-row bg-white">
-      <div className="w-80 h-screen bg-white border-r border-gray-200 flex flex-col">
+    <div className="h-screen w-full flex flex-col md:flex-row bg-white relative">
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="md:hidden fixed top-4 right-4 z-50 bg-violet-500 text-white p-2 rounded-full shadow-lg"
+      >
+        {isSidebarOpen ? "✕" : "☰"}
+      </button>
+
+      <div
+        className={`${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } transform transition-transform duration-300 ease-in-out md:transform-none fixed md:relative w-full md:w-80 h-screen bg-white border-r border-gray-200 flex flex-col z-40`}
+      >
         <div className="p-4 border-b border-gray-200">
           <img
             src="src/assets/certLogo.png"
@@ -204,9 +206,7 @@ const Cert = ({ fields = [], setFields = () => {}, onSave = () => {} }) => {
         <div className="flex-1 overflow-y-auto p-4">
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
-              {/* <h3 className="text-sm font-medium text-gray-700">
-                {selectedFieldIndex !== null ? "Editing Field" : "New Field"}
-              </h3> */}
+              <h3 className="text-sm font-medium text-gray-700">New Field</h3>
               {currentField.points.topLeft && (
                 <button
                   onClick={resetCurrentField}
@@ -238,36 +238,28 @@ const Cert = ({ fields = [], setFields = () => {}, onSave = () => {} }) => {
             {currentField.points.topLeft && currentField.points.bottomRight && (
               <button
                 onClick={addField}
-                className="w-full mt-2 bg-green-500 text-white py-1 px-4 rounded-md hover:bg-green-400"
+                className="w-full mt-2 bg-violet-400 text-white py-1 px-4 rounded-md hover:bg-violet-300"
               >
                 Save Field
               </button>
             )}
           </div>
 
-          {fields.length > 0 && (
+          {savedFields.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-700">
-                Added Fields
+              <h3 className="text-sm mb-2 font-medium text-gray-700">
+                Added Fields ({savedFields.length})
               </h3>
-              {fields.map((field, index) => (
+              {savedFields.map((field, index) => (
                 <div key={index} className="p-2 mb-2 bg-gray-100 rounded-lg">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-medium">{field.name}</span>
-                    <div className="flex gap-2">
-                      {/* <button
-                        onClick={() => editField(index)}
-                        className="text-blue-500 hover:text-blue-600 text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => removeField(index)}
-                        className="text-red-500 hover:text-red-600 text-sm"
-                      >
-                        Remove
-                      </button> */}
-                    </div>
+                    <span className="font-semibold">{field.name}</span>
+                    <button
+                      onClick={() => removeField(index)}
+                      className="text-red-500 hover:text-red-600 text-sm"
+                    >
+                      Remove
+                    </button>
                   </div>
                   <p className="text-sm">
                     Top-Left: [{field.top_left_corner.join(", ")}]
@@ -282,18 +274,44 @@ const Cert = ({ fields = [], setFields = () => {}, onSave = () => {} }) => {
         </div>
 
         <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmit || fields.length === 0}
-            className="w-full bg-violet-500 text-white py-2 px-4 rounded-lg hover:bg-violet-400 disabled:bg-violet-300"
-          >
-            {isSubmit ? "Saving..." : "Save Template"}
-          </button>
+          {!downloadReady ? (
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmit || savedFields.length === 0}
+              className="w-full bg-violet-500 text-white py-2 px-4 rounded-lg hover:bg-violet-400 disabled:bg-violet-300"
+            >
+              {isSubmit ? "Generating..." : "Generate Certificates"}
+            </button>
+          ) : (
+            <button
+              onClick={handleDownload}
+              className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-400 flex items-center justify-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Download Certificates
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="flex-1 h-screen flex justify-center items-center bg-gray-50 p-8">
-        {image ? (
+      <div className="flex-1 h-screen flex justify-center items-center bg-gray-50 p-4 md:p-8">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-violet-500 mb-4"></div>
+            <p className="text-gray-600">Generating your certificates...</p>
+          </div>
+        ) : image ? (
           <img
             alt="preview"
             src={image}
@@ -301,7 +319,7 @@ const Cert = ({ fields = [], setFields = () => {}, onSave = () => {} }) => {
             onClick={imageCoords}
           />
         ) : (
-          <div className="text-gray-400 text-lg">
+          <div className="text-gray-400 text-lg text-center">
             Upload a template to begin
           </div>
         )}

@@ -19,7 +19,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.get("http://");
+      const response = await axios.get("main/login/");
 
       if (response.data.length > 0) {
         const user = response.data[0];
