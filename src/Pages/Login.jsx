@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+// import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ const Login = () => {
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,14 +19,15 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("FormData:", formData);
 
     try {
-      const response = await axios.get("main/login/");
+      const response = await axios.post(
+        "https://10.21.99.10:8000/main/login/",
+        formData
+      );
 
       if (response.data.length > 0) {
-        const user = response.data[0];
-
-        localStorage.setItem("user", JSON.stringify(user));
         navigate("/main");
       } else {
         alert("Invalid Credentials");
@@ -35,10 +38,14 @@ const Login = () => {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prevState) => !prevState);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-cyan-100 via-blue-300 to-indigo-400 p-10">
-      <div className="flex w-full max-w-5xl bg-indigo-50 rounded-3xl shadow-2xl">
-        <div className="w-1/2 p-8 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-cyan-100 via-blue-300 to-indigo-400 p-5">
+      <div className="flex flex-col md:flex-row w-full max-w-5xl bg-indigo-50 rounded-3xl shadow-2xl">
+        <div className="md:w-1/2 p-8 flex items-center justify-center">
           <DotLottieReact
             src="https://lottie.host/3e82e3cf-46d8-485f-b7a2-5efa9b8b4d9a/8nyHYEEZ7a.lottie"
             className="w-full h-full"
@@ -47,7 +54,7 @@ const Login = () => {
           />
         </div>
 
-        <div className="w-1/2 py-16 px-10">
+        <div className="md:w-1/2 py-16 px-10">
           <div className="flex justify-center mb-3">
             <img
               src="src/assets/certLogo.png"
@@ -71,9 +78,9 @@ const Login = () => {
                 required
               />
             </div>
-            <div className="mb-8">
+            <div className="mb-8 relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={formData.password}
@@ -83,6 +90,13 @@ const Login = () => {
                 placeholder="PASSWORD"
                 required
               />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute inset-y-0 right-4 flex items-center text-purple-400 focus:outline-none"
+              >
+                {/* {showPassword ? <FaEyeSlash /> : <FaEye />} */}
+              </button>
             </div>
             <button
               type="submit"
