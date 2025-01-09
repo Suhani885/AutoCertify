@@ -16,7 +16,7 @@ const Dashboard = () => {
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get("https://10.21.99.10:8000/user/profile");
+      // const response = await axios.get("https://10.21.99.10:8000/user/profile");
       setUserEmail(response.data.email);
     } catch (error) {
       console.error("Failed to fetch user data:", error);
@@ -28,7 +28,7 @@ const Dashboard = () => {
 
   const fetchCertificates = async () => {
     try {
-      const response = await axios.get("https://10.21.99.10:8000/main/history");
+      // const response = await axios.get("https://10.21.99.10:8000/main/history");
       setCertificates(response.data);
       setLoading(false);
     } catch (error) {
@@ -51,7 +51,7 @@ const Dashboard = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
+      // window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download failed:", error);
       alert("Failed to download. Please try again.");
@@ -88,7 +88,7 @@ const Dashboard = () => {
       <div className="pt-16 px-6 py-8">
         <div className="max-w-7xl mx-auto mb-8">
           <TopNav />
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow mt-6 p-6">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
@@ -125,13 +125,13 @@ const Dashboard = () => {
             <div className="bg-white rounded-lg shadow p-12 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-10 h-10 text-gray-400"
+                  className="w-16 h-16 mx-auto text-gray-400"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
                 >
-                  <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  <path d="M3 7v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2h-6l-2-2H5c-1.1 0-2 .9-2 2z" />
                 </svg>
               </div>
               <p className="text-gray-500 text-lg">

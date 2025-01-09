@@ -7,6 +7,8 @@ const Cert = ({ setFields = () => {} }) => {
   const [previewImage, setPreviewImage] = useState(null);
   const [templateFile, setTemplateFile] = useState(null);
   const [dataFile, setDataFile] = useState(null);
+  const [fontColor, setFontColor] = useState("#000000");
+  const [fontAlignments, setFontAlignments] = useState({});
   const [fieldName, setFieldName] = useState("");
   const [showSelection, setShowSelection] = useState(false);
   const [selection, setSelection] = useState({
@@ -98,18 +100,29 @@ const Cert = ({ setFields = () => {} }) => {
     }
   };
 
+  const handleColorChange = (e) => setFontColor(e.target.value);
+
+  // const handleFontAlignmentChange = (field, alignment) => {
+  //   setFontAlignments({ ...fontAlignments, [field]: alignment });
+  // };
+
+  const instance = axios.create({
+    withCredentials: true,
+    baseURL: "https://10.21.98.8:8000",
+  });
+
   const generateCertificates = async () => {
     if (!templateFile || !dataFile || savedFields.length === 0) {
-      alert("Please upload template, data file and add at least one field");
+      alert("Please upload template, data file, and add at least one field!");
       return;
     }
 
     setIsGenerating(true);
-    setIsDownloadReady(false);
 
     const formData = new FormData();
-    formData.append("image", templateFile);
-    formData.append("userDataFile", dataFile);
+    formData.append("template", templateFile);
+    formData.append("data_file", dataFile);
+    formData.append("color", fontColor);
     formData.append(
       "data",
       JSON.stringify({
@@ -122,20 +135,21 @@ const Cert = ({ setFields = () => {} }) => {
     );
 
     try {
-      const response = await axios.post(
-        "https://10.21.99.10:8000/main/generate/",
-        formData
-      );
-      setCertificateUrl(response.data.downloadUrl);
-      setIsDownloadReady(true);
+      const response = instance.post("/my_app/zipify/", formData);
+      const { file_path, message } = response.data;
+
+      if (message === "Zip file created successfully" && file_path) {
+        alert("Certificates generated! Click OK to download.");
+        setCertificateUrl(`/media${file_path}`);
+      }
     } catch (error) {
-      alert("Failed to generate certificates. Please try again.");
+      alert("Error generating certificates. Please try again.");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const downloadCertificates = () => {
+  const downloadCertificates = async () => {
     if (certificateUrl) {
       const link = document.createElement("a");
       link.href = certificateUrl;
@@ -151,7 +165,7 @@ const Cert = ({ setFields = () => {} }) => {
       <div className="flex flex-col md:flex-row mt-16 h-[calc(100vh-4rem)]">
         <button
           onClick={() => setShowSidebar(!showSidebar)}
-          className="md:hidden fixed top-20 right-4 z-40 bg-violet-500 text-white p-2 rounded-full shadow-lg"
+          className="md:hidden fixed top-16 right-4 z-40 bg-violet-500 text-white p-2 rounded-full"
         >
           {showSidebar ? "✕" : "☰"}
         </button>
@@ -174,7 +188,7 @@ const Cert = ({ setFields = () => {} }) => {
               />
             </div>
 
-            <div>
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Data File
               </label>
@@ -183,6 +197,18 @@ const Cert = ({ setFields = () => {} }) => {
                 accept=".json,.csv,.xlsx,.xls"
                 onChange={handleDataUpload}
                 className="w-full p-2 border rounded"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Font Colour
+              </label>
+              <input
+                type="color"
+                value={fontColor}
+                onChange={handleColorChange}
+                className="w-full border p-1"
               />
             </div>
           </div>
@@ -271,7 +297,7 @@ const Cert = ({ setFields = () => {} }) => {
           </div>
         </div>
 
-        <div className="flex-1 h-full flex justify-center items-center bg-gray-50 p-4 md:p-8 relative overflow-auto">
+        <div className="flex-1 h-full flex justify-center items-center bg-gray-50 p-7 md:p-8 relative overflow-auto">
           {isGenerating ? (
             <div className="flex flex-col items-center justify-center">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-violet-500 mb-4"></div>
@@ -325,3 +351,54 @@ const Cert = ({ setFields = () => {} }) => {
 };
 
 export default Cert;
+
+//   return (
+//     <div className="min-h-screen w-full flex flex-col bg-white">
+//       <TopNav />
+
+//       <div className="flex flex-col md:flex-row mt-16 h-[calc(100vh-4rem)]">
+//         <div
+//           className={`${sidebarWidth} h-[calc(100vh-4rem)] bg-white border-r border-gray-200 flex flex-col`}
+//         >
+//           <div className="p-4 border-b border-gray-200">
+//             <label className="block text-sm font-medium text-gray-700 mb-2">
+//               Font Colour
+//             </label>
+
+//           </div>
+
+//         </div>
+
+//         <div className="flex-1">
+//           {previewImage && (
+//             <div className="relative">
+//               <img
+//                 src={previewImage}
+//                 alt="Certificate template"
+//                 className="certificate-image max-w-4xl mx-auto shadow-lg"
+//               />
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       <div className="p-4">
+//         {!certificateUrl ? (
+//           <button
+//             onClick={generateCertificates}
+//             className="bg-violet-500 text-white px-4 py-2 rounded"
+//           >
+//             {isGenerating ? "Generating..." : "Generate Certificates"}
+//           </button>
+//         ) : (
+//           <button
+//             onClick={downloadCertificates}
+//             className="bg-green-500 text-white px-4 py-2 rounded"
+//           >
+//             Download Certificates
+//           </button>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };

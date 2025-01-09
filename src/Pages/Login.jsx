@@ -17,23 +17,31 @@ const Login = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const instance = axios.create({
+    withCredentials: true,
+    baseURL: "https://10.21.98.8:8000",
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("FormData:", formData);
+    console.log("Login Data:", formData);
 
     try {
-      const response = await axios.post(
-        "https://10.21.99.10:8000/main/login/",
-        formData
+      const response = await instance.post(
+        "/my_app/login/",
+        JSON.stringify(formData),
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (response.data.length > 0) {
         navigate("/main");
-      } else {
-        alert("Invalid Credentials");
       }
     } catch (error) {
-      console.error("Login Error", error);
+      console.error("Login Error:", error);
       alert("Login Failed");
     }
   };
