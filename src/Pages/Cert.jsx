@@ -102,13 +102,13 @@ const Cert = ({ setFields = () => {} }) => {
 
   const handleColorChange = (e) => setFontColor(e.target.value);
 
-  // const handleFontAlignmentChange = (field, alignment) => {
-  //   setFontAlignments({ ...fontAlignments, [field]: alignment });
-  // };
+  const handleFontAlignmentChange = (field, alignment) => {
+    setFontAlignments({ ...fontAlignments, [field]: alignment });
+  };
 
   const instance = axios.create({
     withCredentials: true,
-    baseURL: "https://10.21.98.8:8000",
+    baseURL: "https://10.21.98.110:8000",
   });
 
   const generateCertificates = async () => {
@@ -130,19 +130,22 @@ const Cert = ({ setFields = () => {} }) => {
           field_name: field.name,
           top_left_corner: field.top_left_corner,
           bottom_right_corner: field.bottom_right_corner,
+          alignment: fontAlignments[field.name] || "left",
         })),
       })
     );
 
     try {
-      const response = instance.post("/my_app/zipify/", formData);
+      const response = await instance.post("/my_app/zipify/", formData);
       const { file_path, message } = response.data;
 
       if (message === "Zip file created successfully" && file_path) {
-        alert("Certificates generated! Click OK to download.");
+        alert("Certificates generated! You can download them now...");
         setCertificateUrl(`/media${file_path}`);
+        setIsDownloadReady(true);
       }
     } catch (error) {
+      console.error(error);
       alert("Error generating certificates. Please try again.");
     } finally {
       setIsGenerating(false);
@@ -151,10 +154,25 @@ const Cert = ({ setFields = () => {} }) => {
 
   const downloadCertificates = async () => {
     if (certificateUrl) {
-      const link = document.createElement("a");
-      link.href = certificateUrl;
-      link.download = "certificates.zip";
-      link.click();
+      try {
+        const downloadUrl = `${instance.defaults.baseURL}${certificateUrl}`;
+
+        const response = await instance.get(downloadUrl, {
+          responseType: "blob",
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "certificates.zip");
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error(error);
+        alert("Failed to download the certificates. Please try again.");
+      }
     }
   };
 
@@ -265,11 +283,50 @@ const Cert = ({ setFields = () => {} }) => {
                         Remove
                       </button>
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-600 mb-2">
                       <div>Top-Left: [{field.top_left_corner.join(", ")}]</div>
                       <div>
                         Bottom-Right: [{field.bottom_right_corner.join(", ")}]
                       </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() =>
+                          handleFontAlignmentChange(field.name, "left")
+                        }
+                        className={`flex-1 py-1 px-2 text-xs rounded ${
+                          fontAlignments[field.name] === "left" ||
+                          !fontAlignments[field.name]
+                            ? "bg-violet-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        Left
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleFontAlignmentChange(field.name, "center")
+                        }
+                        className={`flex-1 py-1 px-2 text-xs rounded ${
+                          fontAlignments[field.name] === "center"
+                            ? "bg-violet-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        Center
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleFontAlignmentChange(field.name, "right")
+                        }
+                        className={`flex-1 py-1 px-2 text-xs rounded ${
+                          fontAlignments[field.name] === "right"
+                            ? "bg-violet-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        Right
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -351,54 +408,3 @@ const Cert = ({ setFields = () => {} }) => {
 };
 
 export default Cert;
-
-//   return (
-//     <div className="min-h-screen w-full flex flex-col bg-white">
-//       <TopNav />
-
-//       <div className="flex flex-col md:flex-row mt-16 h-[calc(100vh-4rem)]">
-//         <div
-//           className={`${sidebarWidth} h-[calc(100vh-4rem)] bg-white border-r border-gray-200 flex flex-col`}
-//         >
-//           <div className="p-4 border-b border-gray-200">
-//             <label className="block text-sm font-medium text-gray-700 mb-2">
-//               Font Colour
-//             </label>
-
-//           </div>
-
-//         </div>
-
-//         <div className="flex-1">
-//           {previewImage && (
-//             <div className="relative">
-//               <img
-//                 src={previewImage}
-//                 alt="Certificate template"
-//                 className="certificate-image max-w-4xl mx-auto shadow-lg"
-//               />
-//             </div>
-//           )}
-//         </div>
-//       </div>
-
-//       <div className="p-4">
-//         {!certificateUrl ? (
-//           <button
-//             onClick={generateCertificates}
-//             className="bg-violet-500 text-white px-4 py-2 rounded"
-//           >
-//             {isGenerating ? "Generating..." : "Generate Certificates"}
-//           </button>
-//         ) : (
-//           <button
-//             onClick={downloadCertificates}
-//             className="bg-green-500 text-white px-4 py-2 rounded"
-//           >
-//             Download Certificates
-//           </button>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };

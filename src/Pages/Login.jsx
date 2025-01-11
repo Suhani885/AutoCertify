@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-// import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,20 +12,22 @@ const Login = () => {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    setError("");
   };
 
   const instance = axios.create({
     withCredentials: true,
-    baseURL: "https://10.21.98.8:8000",
+    baseURL: "https://10.21.98.110:8000",
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
+    setError("");
 
     try {
       const response = await instance.post(
@@ -37,12 +40,16 @@ const Login = () => {
         }
       );
 
-      if (response.data.length > 0) {
-        navigate("/main");
+      if (response.status === 200) {
+        navigate("/main", { replace: true });
+      } else {
+        setError("Invalid credentials");
       }
     } catch (error) {
       console.error("Login Error:", error);
-      alert("Login Failed");
+      setError(
+        error.response?.data?.message || "Login failed. Please try again."
+      );
     }
   };
 
@@ -73,6 +80,9 @@ const Login = () => {
           <p className="text-center text-indigo-400 mb-7">
             Please log in to your account
           </p>
+          {error && (
+            <p className="text-red-500 text-center mb-4 text-sm">{error}</p>
+          )}
           <form className="mb-5" onSubmit={handleSubmit}>
             <div className="mb-5">
               <input
@@ -101,9 +111,9 @@ const Login = () => {
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="absolute inset-y-0 right-4 flex items-center text-purple-400 focus:outline-none"
+                className="absolute inset-y-0 right-4 flex items-center text-purple-400 focus:outline-none hover:text-purple-600 transition-colors"
               >
-                {/* {showPassword ? <FaEyeSlash /> : <FaEye />} */}
+                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
               </button>
             </div>
             <button
