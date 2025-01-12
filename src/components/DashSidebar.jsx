@@ -1,100 +1,74 @@
 import React from "react";
 
-const DashSidebar = ({
-  activeSection,
-  setActiveSection,
-  isCollapsed,
-  setIsCollapsed,
-}) => {
-  const menuItems = [
+const SidebarButton = ({ name, icon, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center w-full p-3 rounded-lg transition-colors ${
+      isActive ? "bg-violet-500 text-white" : "hover:bg-violet-50 text-gray-600"
+    }`}
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className="w-5 h-5 mr-3"
+    >
+      {icon}
+    </svg>
+    <span className="font-medium">{name}</span>
+  </button>
+);
+
+const DashSidebar = ({ activeSection, setActiveSection, isSidebarOpen }) => {
+  const sidebarItems = [
     {
-      id: "home",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-      ),
-      label: "Home",
+      name: "Home",
+      icon: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
     },
     {
-      id: "history",
+      name: "History",
       icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
+        <>
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
-        </svg>
+        </>
       ),
-      label: "Generated History",
     },
     {
-      id: "templates",
+      name: "Templates",
       icon: (
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
+        <>
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
           <circle cx="8.5" cy="8.5" r="1.5" />
           <polyline points="21 15 16 10 5 21" />
-        </svg>
+        </>
       ),
-      label: "My Templates",
+    },
+    {
+      name: "Trash",
+      icon: (
+        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+      ),
     },
   ];
 
   return (
     <div
-      className={`fixed md:relative h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transition-all duration-300 z-30 ${
-        isCollapsed ? "w-20" : "w-64"
-      }`}
+      className={`fixed md:relative w-64 h-[calc(100vh-4rem)] bg-white shadow-lg md:shadow-none transition-transform duration-300 z-40
+        ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
     >
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute right-[-12px] top-4 bg-violet-500 text-white p-1 rounded-full hidden md:block"
-      >
-        <svg
-          className="w-4 h-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
-
-      <div className="p-4">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveSection(item.id)}
-            className={`w-full flex items-center p-3 mb-2 rounded-lg transition-colors ${
-              activeSection === item.id
-                ? "bg-violet-500 text-white"
-                : "text-gray-600 hover:bg-violet-50"
-            }`}
-          >
-            {item.icon}
-            {!isCollapsed && <span className="ml-3">{item.label}</span>}
-          </button>
+      <div className="p-4 flex flex-col gap-2">
+        {sidebarItems.map((item) => (
+          <SidebarButton
+            key={item.name}
+            name={item.name}
+            icon={item.icon}
+            isActive={activeSection === item.name.toLowerCase()}
+            onClick={() => setActiveSection(item.name.toLowerCase())}
+          />
         ))}
       </div>
     </div>

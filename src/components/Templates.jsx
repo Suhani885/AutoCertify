@@ -1,52 +1,82 @@
 import React from "react";
 
-const Templates = ({ templates, onUseTemplate }) => {
-  if (templates.length === 0) {
+const Templates = ({ templates, onDownload, baseURL }) => {
+  const FileIcon = () => (
+    <svg
+      className="w-20 h-20 text-violet-500 mx-auto"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+      <polyline points="13 2 13 9 20 9" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <line x1="10" y1="9" x2="8" y2="9" />
+    </svg>
+  );
+
+  if (!templates?.length) {
     return (
-      <div className="bg-white rounded-lg shadow p-12 text-center">
-        <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
-          <svg
-            className="w-16 h-16 text-gray-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
-        </div>
-        <p className="text-gray-500 text-lg">No templates saved yet</p>
+      <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+        <FileIcon />
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          No Templates Available
+        </h3>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {templates.map((template, index) => (
         <div
           key={index}
-          className="bg-white rounded-lg shadow hover:shadow-lg transition-all duration-300 p-6"
+          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all group"
         >
-          <div className="aspect-w-16 aspect-h-9 mb-4">
-            <img
-              src={template.previewUrl}
-              alt={`Template ${index + 1}`}
-              className="object-cover rounded-lg"
-            />
+          {template.template_path ? (
+            <div className="mb-4 rounded-lg overflow-hidden aspect-video">
+              <img
+                src={`${baseURL}/media/${template.template_path}`}
+                alt={template.name || "Template"}
+                className="w-full h-full object-cover"
+              />
+              <div className="hidden">
+                <FileIcon />
+              </div>
+            </div>
+          ) : (
+            <div className="mb-4">
+              <FileIcon />
+            </div>
+          )}
+
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 truncate font-medium text-center">
+              {template.name || "Template Name"}
+            </p>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">
-              {formatDate(template.createdAt)}
-            </span>
-            <button
-              onClick={() => onUseTemplate(template)}
-              className="bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded-lg text-sm"
+
+          <button
+            onClick={() => onDownload(template)}
+            className="w-full flex items-center justify-center px-4 py-2.5 bg-violet-500 hover:bg-violet-600 text-white rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
             >
-              Use Template
-            </button>
-          </div>
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download
+          </button>
         </div>
       ))}
     </div>

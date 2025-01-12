@@ -1,29 +1,41 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-const Home = ({ userEmail, onCreateNew }) => {
+const RecentActivity = ({ certificates }) => {
+  const recentCerts = certificates.slice(0, 3);
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Welcome back!</h1>
-          <p className="text-gray-600 mt-2">{userEmail}</p>
-        </div>
-        <button
-          onClick={onCreateNew}
-          className="bg-violet-500 hover:bg-violet-600 text-white px-6 py-2 rounded-lg flex items-center"
+    <div className="space-y-3">
+      {recentCerts.map((cert, index) => (
+        <div
+          key={index}
+          className="flex items-center truncate justify-between bg-gray-50 p-2 rounded"
         >
-          <svg
-            className="w-5 h-5 mr-2"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Get Started
+          <span className="text-sm text-gray-600">{cert.zip_file_name}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const Home = ({ userEmail, certificates }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <h2 className="text-2xl font-semibold mb-2">Welcome back!</h2>
+        <p className="text-gray-600">{userEmail}</p>
+        <button
+          onClick={() => navigate("/main")}
+          className="mt-4 w-full bg-violet-500 text-white py-2 px-4 rounded-lg hover:bg-violet-600 transition-colors"
+        >
+          Create New Certificate
         </button>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <h2 className="text-lg font-semibold mb-2">Recently Created</h2>
+        <RecentActivity certificates={certificates} />
       </div>
     </div>
   );

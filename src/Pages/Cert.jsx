@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Rnd } from "react-rnd";
-import axios from "axios";
+import instance from "../services/axiosInstance";
 import TopNav from "../components/Topnav";
+import Alert from "../components/Alert";
 
 const Cert = ({ setFields = () => {} }) => {
   const [previewImage, setPreviewImage] = useState(null);
@@ -23,6 +24,7 @@ const Cert = ({ setFields = () => {} }) => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [certificateUrl, setCertificateUrl] = useState(null);
   const [isDownloadReady, setIsDownloadReady] = useState(false);
+  const [alert, setAlert] = useState(null);
 
   const getImageCoordinates = (selectionBox) => {
     const certificateImg = document.querySelector(".certificate-image");
@@ -48,9 +50,11 @@ const Cert = ({ setFields = () => {} }) => {
     ];
 
     if (bottomRight[0] <= topLeft[0] || bottomRight[1] <= topLeft[1]) {
-      alert(
-        "Please make a valid selection (width and height must be positive)"
-      );
+      setAlert({
+        type: "error",
+        message:
+          "Please make a valid selection (width and height must be positive)",
+      });
       return null;
     }
 
@@ -60,7 +64,7 @@ const Cert = ({ setFields = () => {} }) => {
 
   const saveField = () => {
     if (!fieldName) {
-      alert("Please enter a field name");
+      setAlert({ type: "error", message: "Please enter a field name" });
       return;
     }
 
@@ -106,14 +110,13 @@ const Cert = ({ setFields = () => {} }) => {
     setFontAlignments({ ...fontAlignments, [field]: alignment });
   };
 
-  const instance = axios.create({
-    withCredentials: true,
-    baseURL: "https://10.21.98.110:8000",
-  });
-
   const generateCertificates = async () => {
     if (!templateFile || !dataFile || savedFields.length === 0) {
-      alert("Please upload template, data file, and add at least one field!");
+      setAlert({
+        type: "error",
+        message:
+          "Please upload template, data file, and add at least one field!",
+      });
       return;
     }
 
@@ -140,13 +143,21 @@ const Cert = ({ setFields = () => {} }) => {
       const { file_path, message } = response.data;
 
       if (message === "Zip file created successfully" && file_path) {
-        alert("Certificates generated! You can download them now...");
+        setAlert({
+          type: "success",
+          message: "Certificates generated! You can download them now...",
+        });
         setCertificateUrl(`/media${file_path}`);
         setIsDownloadReady(true);
       }
     } catch (error) {
       console.error(error);
-      alert("Error generating certificates. Please try again.");
+      setAlert({
+        type: "error",
+        message:
+          error.response.data.error ||
+          "Error generating certificates. Please try again.",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -171,7 +182,10 @@ const Cert = ({ setFields = () => {} }) => {
         window.URL.revokeObjectURL(url);
       } catch (error) {
         console.error(error);
-        alert("Failed to download the certificates. Please try again.");
+        setAlert({
+          type: "error",
+          message: "Failed to download the certificates. Please try again.",
+        });
       }
     }
   };
@@ -179,6 +193,14 @@ const Cert = ({ setFields = () => {} }) => {
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
       <TopNav />
+
+      {alert && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={() => setAlert(null)}
+        />
+      )}
 
       <div className="flex flex-col md:flex-row mt-16 h-[calc(100vh-4rem)]">
         <button

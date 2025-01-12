@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import Alert from "../components/Alert";
+import instance from "../services/axiosInstance";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,22 +13,17 @@ const Login = () => {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [alert, setAlert] = useState({ type: "", message: "" });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    setError("");
+    setAlert({ type: "", message: "" });
   };
-
-  const instance = axios.create({
-    withCredentials: true,
-    baseURL: "https://10.21.98.110:8000",
-  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setAlert({ type: "", message: "" });
 
     try {
       const response = await instance.post(
@@ -41,15 +37,23 @@ const Login = () => {
       );
 
       if (response.status === 200) {
-        navigate("/main", { replace: true });
+        setAlert({
+          type: "success",
+          message: response.data.message || "Login successful!",
+        });
+        setTimeout(() => navigate("/main"), 2000);
       } else {
-        setError("Invalid credentials");
+        setAlert({
+          type: "error",
+          message: error.response.data.error || "Invalid credentials.",
+        });
       }
     } catch (error) {
       console.error("Login Error:", error);
-      setError(
-        error.response?.data?.message || "Login failed. Please try again."
-      );
+      setAlert({
+        type: "error",
+        message: error.response.data.error || "Login failed. Please try again.",
+      });
     }
   };
 
@@ -58,8 +62,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-cyan-100 via-blue-300 to-indigo-400 p-5">
-      <div className="flex flex-col md:flex-row w-full max-w-5xl bg-indigo-50 rounded-3xl shadow-2xl">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-cyan-100 via-blue-300 to-indigo-400 p-5">
+      <Alert
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ type: "", message: "" })}
+      />
+
+      <div className="flex flex-col md:flex-row w-full max-w-5xl bg-indigo-50 rounded-3xl shadow-2xl mt-16">
         <div className="md:w-1/2 p-8 flex items-center justify-center">
           <DotLottieReact
             src="https://lottie.host/3e82e3cf-46d8-485f-b7a2-5efa9b8b4d9a/8nyHYEEZ7a.lottie"
@@ -80,9 +90,7 @@ const Login = () => {
           <p className="text-center text-indigo-400 mb-7">
             Please log in to your account
           </p>
-          {error && (
-            <p className="text-red-500 text-center mb-4 text-sm">{error}</p>
-          )}
+
           <form className="mb-5" onSubmit={handleSubmit}>
             <div className="mb-5">
               <input
