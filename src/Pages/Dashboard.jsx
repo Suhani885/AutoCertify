@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import instance from "../services/axiosInstance";
 import TopNav from "../components/TopNav";
+import { useNavigate } from "react-router-dom";
 import DashSidebar from "../components/DashSidebar";
 import History from "../components/History";
 import Templates from "../components/Templates";
@@ -9,6 +10,7 @@ import Trash from "../components/Trash";
 import Alert from "../components/Alert";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("home");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [certificates, setCertificates] = useState([]);
@@ -27,7 +29,7 @@ const Dashboard = () => {
   const fetchUserData = async () => {
     try {
       const response = await instance.get("/my_app/login/");
-      setUserEmail(response.data.email);
+      setUserEmail(response.data.user_info.first_name);
     } catch (error) {
       console.error("Failed to fetch user data:", error);
       if (error.response?.status === 401) {

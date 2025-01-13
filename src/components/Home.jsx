@@ -23,8 +23,8 @@ const Home = ({ userEmail, certificates }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-2xl font-semibold mb-2">Welcome back!</h2>
-        <p className="text-gray-600">{userEmail}</p>
+        <h2 className="text-2xl font-semibold mb-2">Welcome {userEmail}!</h2>
+
         <button
           onClick={() => navigate("/main")}
           className="mt-4 w-full bg-violet-500 text-white py-2 px-4 rounded-lg hover:bg-violet-600 transition-colors"

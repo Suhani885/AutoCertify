@@ -45,7 +45,7 @@ const Trash = () => {
       await instance.delete(
         "/my_app/trash/",
         {
-          id: id,
+          file_id: id,
         },
         {
           headers: {

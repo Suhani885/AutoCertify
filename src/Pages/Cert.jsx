@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
+import { useNavigate } from "react-router-dom";
 import instance from "../services/axiosInstance";
 import TopNav from "../components/Topnav";
 import Alert from "../components/Alert";
 
 const Cert = ({ setFields = () => {} }) => {
+  const navigate = useNavigate();
   const [previewImage, setPreviewImage] = useState(null);
   const [templateFile, setTemplateFile] = useState(null);
   const [dataFile, setDataFile] = useState(null);
   const [fontColor, setFontColor] = useState("#000000");
+  const [fontStyle, setFontStyle] = useState("Arial");
+  const [fontStyles, setFontStyles] = useState([]);
   const [fontAlignments, setFontAlignments] = useState({});
   const [fieldName, setFieldName] = useState("");
   const [showSelection, setShowSelection] = useState(false);
@@ -25,6 +29,48 @@ const Cert = ({ setFields = () => {} }) => {
   const [certificateUrl, setCertificateUrl] = useState(null);
   const [isDownloadReady, setIsDownloadReady] = useState(false);
   const [alert, setAlert] = useState(null);
+  const [zipName, setZipName] = useState("");
+  const [showZipNameModal, setShowZipNameModal] = useState(false);
+
+  useEffect(() => {
+    fetchUserData();
+    fetchFontStyles();
+  }, []);
+
+  const fetchFontStyles = async () => {
+    try {
+      const response = await instance.get("/my_app/fonts/");
+      setFontStyles(response.data.font_list.font_name || []);
+      if (response.data.font_list?.length > 0) {
+        setFontStyle(response.data.font_list[0]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch font styles:", error);
+    }
+  };
+
+  const clearAllData = () => {
+    setPreviewImage(null);
+    setTemplateFile(null);
+    setDataFile(null);
+    setFontColor("#000000");
+    setFontStyle(fontStyles[0]);
+    setFontAlignments({});
+    setFieldName("");
+    setShowSelection(false);
+    setSelection({
+      width: 100,
+      height: 50,
+      x: 0,
+      y: 0,
+    });
+    setLastCoordinates(null);
+    setSavedFields([]);
+    setIsGenerating(false);
+    setCertificateUrl(null);
+    setIsDownloadReady(false);
+    setZipName("");
+  };
 
   const getImageCoordinates = (selectionBox) => {
     const certificateImg = document.querySelector(".certificate-image");
@@ -104,6 +150,17 @@ const Cert = ({ setFields = () => {} }) => {
     }
   };
 
+  const fetchUserData = async () => {
+    try {
+      const response = await instance.get("/my_app/login/");
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      if (error.response?.status === 401) {
+        navigate("/");
+      }
+    }
+  };
+
   const handleColorChange = (e) => setFontColor(e.target.value);
 
   const handleFontAlignmentChange = (field, alignment) => {
@@ -126,6 +183,7 @@ const Cert = ({ setFields = () => {} }) => {
     formData.append("template", templateFile);
     formData.append("data_file", dataFile);
     formData.append("color", fontColor);
+    formData.append("font_style", fontStyle);
     formData.append(
       "data",
       JSON.stringify({
@@ -149,6 +207,7 @@ const Cert = ({ setFields = () => {} }) => {
         });
         setCertificateUrl(`/media${file_path}`);
         setIsDownloadReady(true);
+        setShowZipNameModal(true);
       }
     } catch (error) {
       console.error(error);
@@ -164,10 +223,17 @@ const Cert = ({ setFields = () => {} }) => {
   };
 
   const downloadCertificates = async () => {
+    if (!zipName.trim()) {
+      setAlert({
+        type: "error",
+        message: "Please enter a name for the zip file",
+      });
+      return;
+    }
+
     if (certificateUrl) {
       try {
         const downloadUrl = `${instance.defaults.baseURL}${certificateUrl}`;
-
         const response = await instance.get(downloadUrl, {
           responseType: "blob",
         });
@@ -175,11 +241,12 @@ const Cert = ({ setFields = () => {} }) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "certificates.zip");
+        link.setAttribute("download", `${zipName.trim()}.zip`);
         document.body.appendChild(link);
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
+        setShowZipNameModal(false);
       } catch (error) {
         console.error(error);
         setAlert({
@@ -202,6 +269,35 @@ const Cert = ({ setFields = () => {} }) => {
         />
       )}
 
+      {showZipNameModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h3 className="text-lg font-medium mb-4">Name your zip file</h3>
+            <input
+              type="text"
+              value={zipName}
+              onChange={(e) => setZipName(e.target.value)}
+              placeholder="Enter zip file name"
+              className="w-full px-3 py-2 border rounded-md mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowZipNameModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={downloadCertificates}
+                className="px-4 py-2 bg-violet-500 text-white rounded-md hover:bg-violet-400"
+              >
+                Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row mt-16 h-[calc(100vh-4rem)]">
         <button
           onClick={() => setShowSidebar(!showSidebar)}
@@ -216,6 +312,15 @@ const Cert = ({ setFields = () => {} }) => {
           } fixed md:relative w-full md:w-80 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 flex flex-col z-30 transition-transform duration-300`}
         >
           <div className="p-4 border-b border-gray-200">
+            <div className="flex justify-between items-center mb-4">
+              <button
+                onClick={clearAllData}
+                className="text-red-500 hover:text-red-700"
+              >
+                Clear All
+              </button>
+            </div>
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Certificate Template
@@ -238,6 +343,23 @@ const Cert = ({ setFields = () => {} }) => {
                 onChange={handleDataUpload}
                 className="w-full p-2 border rounded"
               />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Font Style
+              </label>
+              <select
+                value={fontStyle}
+                onChange={(e) => setFontStyle(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                {fontStyles.map((style) => (
+                  <option key={style} value={style}>
+                    {style}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -279,6 +401,7 @@ const Cert = ({ setFields = () => {} }) => {
                   </div>
                 </div>
               )}
+
               {showSelection && (
                 <button
                   onClick={saveField}
@@ -296,7 +419,7 @@ const Cert = ({ setFields = () => {} }) => {
                 </h3>
                 {savedFields.map((field, index) => (
                   <div key={index} className="p-2 mb-2 bg-gray-100 rounded-lg">
-                    <div className="flex justify-between items-center mb-1">
+                    <div className="flex justify-between items-center mb-3">
                       <span className="font-semibold">{field.name}</span>
                       <button
                         onClick={() => deleteField(index)}
@@ -304,12 +427,6 @@ const Cert = ({ setFields = () => {} }) => {
                       >
                         Remove
                       </button>
-                    </div>
-                    <div className="text-xs text-gray-600 mb-2">
-                      <div>Top-Left: [{field.top_left_corner.join(", ")}]</div>
-                      <div>
-                        Bottom-Right: [{field.bottom_right_corner.join(", ")}]
-                      </div>
                     </div>
                     <div className="flex gap-1">
                       <button
@@ -387,11 +504,11 @@ const Cert = ({ setFields = () => {} }) => {
               <img
                 src={previewImage}
                 alt="Certificate template"
-                className="certificate-image max-w-full max-h-full object-contain shadow-lg"
+                className="certificate-image max-w-full h-[calc(100vh-6rem)] object-contain"
               />
               {showSelection && (
                 <Rnd
-                  className="bg-violet-500 bg-opacity-20 border-2 border-violet-500"
+                  className="bg-violet-500 bg-opacity-20 border-2 border-violet-500 flex items-center justify-center"
                   size={{ width: selection.width, height: selection.height }}
                   position={{ x: selection.x, y: selection.y }}
                   onDragStop={(e, d) => {
@@ -415,7 +532,19 @@ const Cert = ({ setFields = () => {} }) => {
                   minWidth={20}
                   minHeight={20}
                   bounds="parent"
-                />
+                >
+                  {fieldName && (
+                    <div
+                      style={{
+                        color: fontColor,
+                        fontFamily: fontStyle,
+                        textAlign: fontAlignments[fieldName] || "left",
+                      }}
+                    >
+                      {fieldName}
+                    </div>
+                  )}
+                </Rnd>
               )}
             </div>
           ) : (

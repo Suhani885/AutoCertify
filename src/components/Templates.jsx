@@ -41,7 +41,7 @@ const Templates = ({ templates, onDownload, baseURL }) => {
             <div className="mb-4 rounded-lg overflow-hidden aspect-video">
               <img
                 src={`${baseURL}/media/${template.template_path}`}
-                alt={template.name || "Template"}
+                alt={template.tempplate_name || "Template"}
                 className="w-full h-full object-cover"
               />
               <div className="hidden">
@@ -56,7 +56,7 @@ const Templates = ({ templates, onDownload, baseURL }) => {
 
           <div className="mb-4">
             <p className="text-sm text-gray-600 truncate font-medium text-center">
-              {template.name || "Template Name"}
+              {template.tempplate_name || "Template Name"}
             </p>
           </div>
 

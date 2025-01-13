@@ -119,7 +119,7 @@ const History = ({ certificates, onDownload, fetchCertificates }) => {
           },
         }
       );
-      setShowRenameModal(false);
+      setShowRenameFolderModal(false);
       setSelectedFolderId(null);
       setNewFolderName("");
       fetchFolders();
@@ -151,26 +151,19 @@ const History = ({ certificates, onDownload, fetchCertificates }) => {
     }
   };
 
-  // const handleFolderClick = async (folderId) => {
-  //   const formData = new FormData();
-  //   formData.append("folder_id", folderId);
-
-  //   try {
-  //     const response = await instance.get(
-  //       "/my_app/my-drive/files/",
-  //       formData,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       }
-  //     );
-  //     setCurrentFiles(response.data.files || []);
-  //     setCurrentFolderId(folderId);
-  //   } catch (error) {
-  //     console.error("Failed to fetch folder contents:", error);
-  //   }
-  // };
+  const handleFolderClick = async (folderId) => {
+    try {
+      await instance.get(`/my_app/my-drive/?id=${folderId}`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      setCurrentFiles(response.data.zips || []);
+      setCurrentFolderId(folderId);
+    } catch (error) {
+      console.error("Failed to fetch folder contents:", error);
+    }
+  };
 
   const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
@@ -262,7 +255,7 @@ const History = ({ certificates, onDownload, fetchCertificates }) => {
             </>
           )}
         </div>
-        {/* {currentFolderId && (
+        {currentFolderId && (
           <button
             onClick={() => {
               setCurrentFolderId(null);
@@ -272,7 +265,7 @@ const History = ({ certificates, onDownload, fetchCertificates }) => {
           >
             Back to Root
           </button>
-        )} */}
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -280,7 +273,7 @@ const History = ({ certificates, onDownload, fetchCertificates }) => {
           folders.map((folder) => (
             <div
               key={folder.child_directory_id}
-              // onClick={() => handleFolderClick(folder.child_directory_id)}
+              onClick={() => handleFolderClick(folder.child_directory_id)}
               className="cursor-pointer bg-white rounded-xl shadow-sm p-4 hover:shadow-md"
             >
               <svg
@@ -335,48 +328,55 @@ const History = ({ certificates, onDownload, fetchCertificates }) => {
                   </path>
                 </g>
               </svg>
-              <p className="text-center mt-4 font-medium text-gray-900">
-                {folder.child_directory_name}
-              </p>
-              <button
-                onClick={(e) => {
-                  setSelectedFolderId(folder.child_directory_id);
-                  setNewFolderName(folder.child_directory_name);
-                  setShowRenameFolderModal(true);
-                }}
-                className="p-1 text-gray-400 hover:text-violet-500 rounded-full hover:bg-violet-50"
-                title="Rename"
-              >
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+              <div>
+                <p className="text-center mt-4 font-medium text-gray-900">
+                  {folder.child_directory_name}
+                </p>
+                <button
+                  onClick={(e) => {
+                    setSelectedFolderId(folder.child_directory_id);
+                    setNewFolderName(folder.child_directory_name);
+                    setShowRenameFolderModal(true);
+                  }}
+                  className="p-1 text-gray-400 hover:text-violet-500 rounded-full hover:bg-violet-50"
+                  title="Rename"
                 >
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </button>
-              <button
-                onClick={(e) => {
-                  handleDeleteFolder(folder.child_directory_id);
-                }}
-                className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50"
-                title="Delete"
-              >
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    handleDeleteFolder(folder.child_directory_id);
+                  }}
+                  className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50"
+                  title="Delete"
                 >
-                  <path d="M19 7l-3 13H8L5 7" />
-                  <path d="M23 7H1" />
-                  <path d="M8 7V3h8v4" />
-                </svg>
-              </button>
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M19 7l-3 13H8L5 7" />
+                    <path d="M23 7H1" />
+                    <path d="M8 7V3h8v4" />
+                  </svg>
+                </button>
+              </div>
+              <div className="justify-center ">
+                <span className="text-xs text-gray-400">
+                  Created On {new Date(folder.created_at).toLocaleDateString()}
+                </span>
+              </div>
             </div>
           ))}
 
@@ -469,7 +469,7 @@ const History = ({ certificates, onDownload, fetchCertificates }) => {
               </div>
             </div>
 
-            <div className="mb-4 flex justify-around">
+            <div className="mb-1 flex justify-around">
               <p className="text-sm text-gray-600 truncate font-medium text-center">
                 {cert.zip_file_name}
               </p>
@@ -489,6 +489,11 @@ const History = ({ certificates, onDownload, fetchCertificates }) => {
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
               </button>
+            </div>
+            <div className="justify-center mt-5">
+              <span className="text-xs text-gray-400">
+                Created On {new Date(cert.created_at).toLocaleDateString()}
+              </span>
             </div>
           </div>
         ))}
