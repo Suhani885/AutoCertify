@@ -1,6 +1,6 @@
 # AutoCertify - Certificate Generator
 
-A powerful web application for creating, customizing, and generating bulk certificates with ease.
+Design. Personalize. Deliver — Effortless Certificate Generation at Scale.
 
 ## 🌟 Features
 
@@ -9,6 +9,7 @@ A powerful web application for creating, customizing, and generating bulk certif
 - **Batch Processing**: Generate certificates from CSV, Excel, or JSON data files
 - **Customizable Text**: Control font style, color, and alignment for professional-looking certificates
 - **Downloadable Results**: Download all generated certificates as a convenient ZIP file
+- **Statistics Summary**: View generated certificates, used templates, recent batches
 
 
 ## 🛠️ Technologies Used
