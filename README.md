@@ -1,6 +1,6 @@
 # AutoCertify - Certificate Generator
 
-Design. Personalize. Deliver — Effortless Certificate Generation at Scale.
+Create and Customize Bulk Certificates with Precision and Simplicity.
 
 ## 🌟 Features
 
