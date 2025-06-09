@@ -14,11 +14,11 @@ Create and Customize Bulk Certificates with Precision and Simplicity.
 
 ## 🛠️ Technologies Used
 
-- **React**: Frontend UI library
-- **Tailwind CSS**: Utility-first CSS framework for styling
-- **Axios**: HTTP client for API requests
-- **React Router**: Navigation and routing
-- **React RND**: Resizable and draggable components
+- **React**
+- **Tailwind CSS**
+- **Axios**
+- **React Router**
+- **React RND**
 
 
 ### Setup
